@@ -27,7 +27,7 @@ def validator(obj, path):
     except:
         return None
 
-def crawler(url):
+def crawler(url, enable_db=False):
     db = get_db_client(
         json.load( open('config.json') )['db']
     ) 
@@ -42,11 +42,13 @@ def crawler(url):
 
         # Scrape links from listing
         links = parse_listing_urls(url)
+        data = [ page_scraper(link) for link in links ]
 
         # Scrape pages & store in db
-        collection.insert_many([
-            page_scraper(link) for link in links
-        ])
+        if (enable_db):
+            collection.insert_many(data)
+        else:
+            print(data)
 
         # Break loop if last page
         next = soup.find('a', {'data-lurker-detail': "next_page"})
