@@ -3,9 +3,17 @@ import json
 import requests
 
 from rich import print
+from typing import Dict
 from bs4 import BeautifulSoup
-from pymongo import MongoClient
 from multiprocessing import Pool
+
+def get_db_client( options: Dict, **kwargs ):
+    from pymongo import MongoClient
+
+    options = {**options, **kwargs}
+    uri = f"mongodb://{options['username']}:{options['password']}@{options['host']}:{options['port']}/{options['database']}"
+
+    return MongoClient( uri )
 
 def validator(obj, path):
     f = lambda x: f"['{x}']"
@@ -20,8 +28,9 @@ def validator(obj, path):
         return None
 
 def crawler(url):
-    client = MongoClient( 'localhost', 27017 )
-    db = client['olx']
+    db = get_db_client(
+        json.load( open('config.json') )['db']
+    ) 
     collection = db['real_estate']
 
     print( f"Started crawling {url}" )
